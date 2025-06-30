@@ -1,7 +1,5 @@
 # Gemini Powered Pet Simulator
 
-![Gameplay Screenshot](https://via.placeholder.com/600x300.png?text=Tambahkan+Screenshot+Gameplay+di+Sini)
-
 Prototipe game simulasi hewan peliharaan 2D top-down di Unity di mana setiap NPC memiliki kepribadian, kebutuhan, dan interaksi yang unik, didukung oleh Google Gemini AI.
 
 ---
