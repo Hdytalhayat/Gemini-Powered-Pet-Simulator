@@ -83,8 +83,9 @@ public class UnityAndGeminiV3 : MonoBehaviour
     // --- MODIFIKASI --- Event ini sekarang mengirimkan string response dan boolean status sukses
     public Action<string, bool> OnGeminiResponse;
     
-    [Header("JSON API Configuration")]
-    public TextAsset jsonApi; // Assign file JSON_KEY_TEMPLATE.json di sini
+    [Header("API Key Configuration")]
+    [Tooltip("Assign the 'GeminiKey.json' file here. This file should contain your private API key.")]
+    public TextAsset geminiKeyJsonFile;
     private string apiKey = "";
     
     // --- MODIFIKASI --- Menggunakan model Flash terbaru yang lebih cepat dan efisien
@@ -92,15 +93,22 @@ public class UnityAndGeminiV3 : MonoBehaviour
 
     private void Start()
     {
-        if (jsonApi == null)
+        if (geminiKeyJsonFile == null)
         {
-            Debug.LogError("JSON API Key file (jsonApi) belum di-assign di Inspector!");
+            Debug.LogError("File kunci API 'GeminiKey.json' belum di-assign di Inspector pada script UnityAndGeminiV3!");
+            Debug.LogWarning("Pastikan Anda sudah mengganti nama 'GeminiKey.template.json' menjadi 'GeminiKey.json' dan mengisinya dengan API Key Anda, lalu assign ke Inspector.");
             return;
         }
         try
         {
-            UnityAndGeminiKey jsonApiKey = JsonUtility.FromJson<UnityAndGeminiKey>(jsonApi.text);
+            UnityAndGeminiKey jsonApiKey = JsonUtility.FromJson<UnityAndGeminiKey>(geminiKeyJsonFile.text);
             apiKey = jsonApiKey.key;
+
+            if (apiKey == "GANTI_DENGAN_API_KEY_GEMINI_ANDA" || string.IsNullOrEmpty(apiKey))
+            {
+                Debug.LogError("API Key di dalam 'GeminiKey.json' belum diisi. Silakan edit file tersebut.");
+                apiKey = ""; // Kosongkan agar tidak mencoba request
+            }
         }
         catch (Exception e)
         {
