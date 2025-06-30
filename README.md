@@ -32,7 +32,7 @@ To run this project on your computer, follow these steps.
 1. **Clone this repository:**
 
    ```bash
-   git clone https://github.com/YourName/Gemini-Pet-Simulator.git
+   git clone https://github.com/Hdytalhayat/Gemini-Powered-Pet-Simulator.git
    ```
 2. **Open the project in Unity Hub:**
 
