@@ -1,10 +1,10 @@
-// --- START OF FILE GameManager.cs ---
+// --- FILE: GameManager.cs ---
 
 using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
 
-// Class helper untuk parsing JSON dari Gemini
+// Helper class for parsing JSON from Gemini
 [System.Serializable]
 public class NPCPersonality
 {
@@ -16,11 +16,11 @@ public class NPCPersonality
 
 public class GameManager : MonoBehaviour
 {
-    [Header("API Settings")]
-    [Tooltip("Jika dicentang, game akan menggunakan data acak lokal dan tidak akan memanggil Gemini API. Berguna untuk development agar tidak menghabiskan kuota.")]
-    public bool useOfflineDevelopmentMode = true;
-
     public enum GeminiRequestType { Personality, Interaction }
+
+    [Header("API Settings")]
+    [Tooltip("If checked, the game will use local random data and will not call the Gemini API. Useful for development to avoid consuming the API quota.")]
+    public bool useOfflineDevelopmentMode = true;
 
     [Header("Game Configuration")]
     public UnityAndGeminiV3 geminiAPI;
@@ -34,13 +34,14 @@ public class GameManager : MonoBehaviour
     private NPCController _interactingInitiator;
     private NPCController _interactingOther;
 
+    // A list of names for offline mode to provide some variety
     private List<string> offlineNames = new List<string> { "Piko", "Mochi", "Boba", "Kiki", "Dodo", "Fifi", "Gigi", "Hobi", "Nino", "Popo" };
     
     void Start()
     {
         if (geminiAPI == null || npcPrefab == null)
         {
-            Debug.LogError("Gemini API atau NPC Prefab belum di-assign di Inspector!");
+            Debug.LogError("Gemini API or NPC Prefab is not assigned in the Inspector!");
             return;
         }
 
@@ -50,9 +51,8 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("GAME BERJALAN DALAM MODE OFFLINE. Tidak ada panggilan API yang akan dilakukan.");
+            Debug.LogWarning("GAME IS RUNNING IN OFFLINE MODE. No API calls will be made.");
         }
-
 
         for (int i = 0; i < numberOfNPCsToCreate; i++)
         {
@@ -69,7 +69,7 @@ public class GameManager : MonoBehaviour
     private void HandleGeminiResponse(string response, bool success)
     {
         if (!success) {
-            Debug.LogError("Gemini request gagal.");
+            Debug.LogError("Gemini request failed.");
             if(lastRequestType == GeminiRequestType.Personality) AssignDefaultPersonalityAndContinue();
             if(lastRequestType == GeminiRequestType.Interaction) EndFailedInteraction();
             return;
@@ -88,7 +88,7 @@ public class GameManager : MonoBehaviour
     
     void EndFailedInteraction()
     {
-        Debug.LogWarning("Interaksi gagal karena API Error. NPC kembali beraktivitas.");
+        Debug.LogWarning("Interaction failed due to API Error. NPCs are returning to their activities.");
         if (_interactingInitiator != null) _interactingInitiator.ReceiveInteractionResult(false);
         if (_interactingOther != null) _interactingOther.ReceiveInteractionResult(false);
         _interactingInitiator = null;
@@ -106,7 +106,7 @@ public class GameManager : MonoBehaviour
             else
             {
                 lastRequestType = GeminiRequestType.Personality;
-                Debug.Log("Meminta kepribadian baru dari Gemini...");
+                Debug.Log("Requesting new personality from Gemini...");
                 string systemPrompt = "You are a game designer creating unique personalities for cute animal NPCs. Respond ONLY with a valid JSON object and nothing else, not even the word 'json' or backticks. The JSON must contain: a 'name' (a single cute animal name), 'socialness' (a number from 1 to 10), 'laziness' (a number from 1 to 10), and 'cleanliness' (a number from 1 to 10).";
                 string prompt = "Generate a new, unique NPC personality.";
                 geminiAPI.RequestGemini(prompt, null, systemPrompt);
@@ -114,7 +114,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            Debug.Log("Semua NPC sudah memiliki kepribadian!");
+            Debug.Log("All NPCs have been assigned a personality!");
         }
     }
 
@@ -122,6 +122,7 @@ public class GameManager : MonoBehaviour
     {
         if (npcPersonalityQueue.Count > 0)
         {
+            Debug.Log("Generating NPC personality offline...");
             NPCController targetNpc = npcPersonalityQueue.Dequeue();
             string randomName = $"Pet#{Random.Range(100,999)}";
             if(offlineNames.Count > 0)
@@ -140,6 +141,7 @@ public class GameManager : MonoBehaviour
 
     void HandleGeminiPersonalityResponse(string jsonResponse)
     {
+        Debug.Log("Received personality JSON: " + jsonResponse);
         if (npcPersonalityQueue.Count > 0)
         {
             NPCController targetNpc = npcPersonalityQueue.Peek();
@@ -154,7 +156,7 @@ public class GameManager : MonoBehaviour
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"Gagal parsing JSON: {e.Message}. Response mentah: {jsonResponse}");
+                Debug.LogError($"Failed to parse JSON: {e.Message}. Raw response: {jsonResponse}");
                 AssignDefaultPersonalityAndContinue(true); 
                 return;
             }
@@ -165,6 +167,7 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator DelayedRequestNextPersonality(float delay)
     {
+        // Debug.Log($"Waiting for {delay} seconds before the next personality request...");
         yield return new WaitForSeconds(delay);
         RequestNextNPCPersonality();
     }
@@ -175,9 +178,11 @@ public class GameManager : MonoBehaviour
         {
             NPCController targetNpc = npcPersonalityQueue.Dequeue();
             if (reQueue) {
+                Debug.LogWarning($"Failed to process personality for NPC. Re-queueing for a later attempt.");
                 npcPersonalityQueue.Enqueue(targetNpc);
                 StartCoroutine(DelayedRequestNextPersonality(5.0f));
             } else {
+                Debug.LogWarning($"Assigning default personality to NPC due to API failure.");
                 targetNpc.SetPersonality("Robusto", Random.Range(1,11), Random.Range(1,11), Random.Range(1,11));
                 targetNpc.Initialize();
                 StartCoroutine(DelayedRequestNextPersonality(2.0f));
@@ -190,7 +195,7 @@ public class GameManager : MonoBehaviour
         activeNpcs.RemoveAll(npc => npc == null);
         if (activeNpcs.Count == 0)
         {
-            Debug.LogError("GAME OVER! Semua NPC telah mati.");
+            Debug.LogError("GAME OVER! All NPCs have died.");
             Time.timeScale = 0;
         }
     }
@@ -207,7 +212,7 @@ public class GameManager : MonoBehaviour
         else
         {
             lastRequestType = GeminiRequestType.Interaction;
-            Debug.Log($"GameManager meminta interaksi antara {initiator.npcName} dan {other.npcName}");
+            Debug.Log($"GameManager is requesting an interaction between {initiator.npcName} and {other.npcName}");
             
             string systemPrompt = "You are a story generator. Describe a one-sentence interaction between two NPCs. Then, on a new line, write 'OUTCOME: POSITIVE' if it was a good interaction, 'OUTCOME: NEGATIVE' if it was bad, or 'OUTCOME: NEUTRAL' if it was neither. Respond with only these two lines.";
             string prompt = $"NPC 1, named {initiator.npcName} (social: {initiator.socialness}/10), interacts with NPC 2, named {other.npcName} (social: {other.socialness}/10). Generate their interaction and its outcome.";
@@ -216,18 +221,12 @@ public class GameManager : MonoBehaviour
         }
     }
     
-    // --- MODIFIKASI LOGIKA OFFLINE ---
     void HandleOfflineInteraction()
     {
-        Debug.Log($"Mensimulasikan interaksi offline antara {_interactingInitiator.npcName} dan {_interactingOther.npcName}");
+        Debug.Log($"Simulating offline interaction between {_interactingInitiator.npcName} and {_interactingOther.npcName}");
 
-        // Logika lebih cerdas:
-        // 1. Ambil rata-rata socialness kedua NPC.
-        // 2. Semakin tinggi rata-ratanya, semakin besar kemungkinan interaksi positif.
         float avgSocialness = (_interactingInitiator.socialness + _interactingOther.socialness) / 2.0f;
-        // Konversi socialness (1-10) menjadi probabilitas (0.1 - 1.0)
         float positiveChance = avgSocialness / 10.0f; 
-
         bool wasPositive = Random.value < positiveChance;
 
         if (_interactingInitiator != null) _interactingInitiator.ReceiveInteractionResult(wasPositive);
@@ -239,7 +238,7 @@ public class GameManager : MonoBehaviour
 
     void HandleGeminiInteractionResponse(string interactionResult)
     {
-        Debug.Log("Hasil Interaksi dari Gemini:\n" + interactionResult);
+        Debug.Log("Interaction result from Gemini:\n" + interactionResult);
         
         bool wasPositive = false;
         
