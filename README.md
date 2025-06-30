@@ -49,10 +49,6 @@ To run this project on your computer, follow these steps.
    * Select the GameObject with the `UnityAndGeminiV3` script in the Hierarchy (usually named `GameManager` or similar).
    * In the Inspector, find the `Unity And Gemini V3` component.
    * Drag the **`GeminiKey.json`** file from the `Assets` folder into the `Gemini Key Json File` field.
-5. **Open the Main Scene:**
-
-   * In the Project window, find the main scene (e.g., `SampleScene`) and open it.
-6. **Press the Play Button!**
 
 ## 🎮 How to Use
 
