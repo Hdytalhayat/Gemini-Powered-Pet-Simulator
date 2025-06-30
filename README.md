@@ -58,13 +58,3 @@ To run this project on your computer, follow these steps.
 
 * **Online Mode**: To use Gemini, select the `GameManager` object in the Hierarchy. In the Inspector, **uncheck** `Use Offline Development Mode`.
 * **Offline Mode (Default)**: For development without using API quota, **ensure** `Use Offline Development Mode` is **checked**. The game will use local random data for personalities and interactions.
-
----
-
-## ⚖️ License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
----
-
-Let me know if you need **polishing for publication**, conversion to a README.md with markdown formatting and badges, or integration notes for your current AI plugin documentation this week.
